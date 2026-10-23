@@ -189,6 +189,49 @@ body.dark{color-scheme:dark;--deep:#d8f1e3;--green:#4fca99;--green2:#63d5a8;--go
   #home .home-shortcuts{margin-bottom:8px}
   #home .home-shortcuts .qi{width:32px;height:32px}
 }
+
+/* Approved Home screen reference: mobile dictionary app layout */
+@media(max-width:760px){
+  #home.screen.active{overflow-y:auto;overflow-x:hidden;padding-bottom:0}
+  #home .home-main{flex:1 0 auto;display:block;overflow:visible;padding:25px 18px 0}
+  #home .home-copy{width:100%;text-align:left}
+  #home .home-copy h1{font-size:clamp(27px,7.6vw,34px);font-weight:800;line-height:1.16;letter-spacing:-.035em;margin:17px 0 4px}
+  #home .home-copy .home-subtitle{font-size:clamp(17px,5vw,21px);line-height:1.35;margin:0 0 24px;color:#66716b}
+  #home .searchbar{display:flex;width:100%;min-height:58px;border:1px solid #e8eeeb;border-radius:15px;background:#fff;box-shadow:0 3px 14px #163a2a08;padding:5px 6px 5px 13px;margin:0 0 20px;gap:8px}
+  #home .searchbar .glass{font-size:24px;color:#8a9890}
+  #home .searchbar input{font-size:14px;padding:10px 2px;min-width:0}
+  #home .searchbar button{flex:0 0 46px;width:46px;height:46px;border-radius:13px;background:#07835f;font-size:22px}
+  #home .direction-tiles{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:13px;margin:0 0 27px}
+  #home .direction-tile{height:clamp(108px,30vw,132px);border-radius:24px;gap:14px;font-size:clamp(13px,3.8vw,17px);font-weight:750}
+  #home .tile-ha{background:linear-gradient(145deg,#078e49,#00723c)}
+  #home .tile-en{background:linear-gradient(145deg,#2878e6,#1e58c4)}
+  #home .tile-symbol{font-size:24px}
+  #home .quicklinks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin:0 0 27px}
+  #home .quick{min-width:0;gap:8px;font-size:clamp(10px,3vw,13px);font-weight:700;color:#303a34}
+  #home .quick .qi{width:54px;height:54px;display:grid;place-items:center;border-radius:50%;background:#f4f7f8;color:#176b57;font-size:25px;margin:0}
+  #home .quick:nth-child(3) .qi{color:#176b57}
+  #home .quick:nth-child(4) .qi{color:#2868c7}
+  #home .bottom-stats{display:block;flex:none;padding:0 18px 23px;margin:0}
+  #home .today-word{display:block;padding:0 0 8px;width:100%}
+  #home .today-heading{display:flex;align-items:center;justify-content:space-between;font-size:15px;font-weight:800;margin:0 0 0;padding:15px 15px;background:#f5f7f8;border-radius:14px 14px 0 0;color:#23362d}
+  #home .today-heading:after{content:"›";font-size:24px;font-weight:400;color:#9aa69f}
+  #home .today-entry{min-height:76px;padding:13px 15px;background:#fff;border:1px solid #f0f2f1;border-top:0;border-radius:0 0 14px 14px;box-shadow:0 4px 16px #173b2b06}
+  #home .today-entry strong{font-size:17px;color:#202b25;margin-bottom:4px}
+  #home .today-entry small{font-size:12px;color:#68756e}
+  #home .today-sound{font-size:23px;color:#087b5c;padding:6px 0 6px 8px}
+  .mobile-tabs{position:relative;bottom:auto;left:auto;right:auto;min-height:68px;flex:none;padding:6px 8px calc(6px + env(safe-area-inset-bottom));border-top:1px solid #e5eae7;background:#fff}
+  .mobile-tab{font-size:10px;gap:4px}
+  .mobile-tab .tab-icon{font-size:22px}
+}
+@media(max-width:390px){
+  .mobile-top .brand img{width:190px}
+  #home .home-main{padding-left:17px;padding-right:17px}
+  #home .bottom-stats{padding-left:17px;padding-right:17px}
+  #home .direction-tiles{gap:10px}
+  #home .direction-tile{border-radius:21px}
+  #home .quick .qi{width:48px;height:48px}
+}
+
 </style>
 </head>
 <body><div class="app">
