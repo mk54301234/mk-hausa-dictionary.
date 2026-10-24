@@ -20,7 +20,7 @@ These are candidate sources for a controlled import and editorial review, not a 
 
 ## Current status
 
-The live database currently has 2 published entries and 10 draft candidate entries awaiting editorial review. The public website fetches published records in stable pages of 1,000 rows, rather than stopping after a single 5,000-row request. Loading the entire corpus into the browser is still not the ideal long-term design for 100,000 entries; server-side search and pagination should be implemented before production-scale launch. Draft candidates are not visible on the public site until approved.
+The live database currently has 2 published entries and 76 draft candidate entries awaiting editorial review. The public website fetches published records in stable pages of 1,000 rows, rather than stopping after a single 5,000-row request. Loading the entire corpus into the browser is still not the ideal long-term design for 100,000 entries; server-side search and pagination should be implemented before production-scale launch. Draft candidates are not visible on the public site until approved. The current manually prepared draft batch is a working review queue, not a claim of fully source-verified lexicographic content; verify Hausa spelling, senses, examples, and part of speech before publication.
 
 ## Development
 
