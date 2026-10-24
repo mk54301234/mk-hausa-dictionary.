@@ -5,7 +5,7 @@ on:
       - feature/mk-dictionary-ui
   pull_request:
     branches:
-      - feature/mk-dictionary-ui
+      - main
 jobs:
   validate:
     runs-on: ubuntu-latest
