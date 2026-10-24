@@ -58,3 +58,21 @@ jobs:
           PY
           node --check /tmp/index-0.mjs
           node --check /tmp/admin-0.mjs
+
+      - name: Smoke-test public Supabase dictionary and settings
+        run: |
+          node --input-type=module <<'JS'
+          const base = 'https://atoiwrpomcwurtuqolmc.supabase.co/rest/v1';
+          const key = 'sb_publishable_XTQLRvmaBIcRyHskTEqxSw_EXkAdQxt';
+          async function read(path) {
+            const response = await fetch(base + path, { headers: { apikey: key } });
+            if (!response.ok) throw new Error(`Supabase request failed (${response.status}) for ${path}`);
+            return response.json();
+          }
+          const words = await read('/dictionary_entries?select=id,hausa_word,english_translation,related_words&status=eq.published&limit=5');
+          if (!Array.isArray(words)) throw new Error('Published entries response is not an array');
+          if (words.length && (!words[0].hausa_word || !words[0].english_translation)) throw new Error('Published entry is missing required display fields');
+          const settings = await read('/dictionary_settings?select=home_direction&id=eq.true');
+          if (!Array.isArray(settings) || !settings.length || !['ha-en','en-ha'].includes(settings[0].home_direction)) throw new Error('Home Screen language setting is missing or invalid');
+          console.log(`Public API smoke test passed: ${words.length} published entry sample(s), Home Screen direction ${settings[0].home_direction}.`);
+          JS
