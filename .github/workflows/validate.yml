@@ -1,0 +1,60 @@
+name: Validate MK Hausa Dictionary
+on:
+  push:
+    branches:
+      - feature/mk-dictionary-ui
+  pull_request:
+    branches:
+      - feature/mk-dictionary-ui
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate HTML and inline JavaScript
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import re
+
+          class Checker(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.ids = set()
+                  self.duplicates = []
+                  self.scripts = []
+                  self.in_script = False
+                  self.current = []
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if 'id' in attrs:
+                      if attrs['id'] in self.ids:
+                          self.duplicates.append(attrs['id'])
+                      self.ids.add(attrs['id'])
+                  if tag == 'script' and not attrs.get('src'):
+                      self.in_script = True
+                      self.current = []
+              def handle_data(self, data):
+                  if self.in_script:
+                      self.current.append(data)
+              def handle_endtag(self, tag):
+                  if tag == 'script' and self.in_script:
+                      self.scripts.append(''.join(self.current))
+                      self.in_script = False
+
+          for filename in ('index.html', 'admin.html'):
+              parser = Checker()
+              parser.feed(Path(filename).read_text(encoding='utf-8'))
+              if parser.duplicates:
+                  raise SystemExit(f'{filename}: duplicate IDs: {parser.duplicates}')
+              for number, script in enumerate(parser.scripts):
+                  target = Path(f'/tmp/{Path(filename).stem}-{number}.mjs')
+                  target.write_text(script, encoding='utf-8')
+                  print(f'{filename}: extracted inline script {number + 1}')
+          PY
+          node --check /tmp/index-0.mjs
+          node --check /tmp/admin-0.mjs
