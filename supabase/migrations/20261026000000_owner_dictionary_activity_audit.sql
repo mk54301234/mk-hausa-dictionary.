@@ -81,3 +81,42 @@ drop trigger if exists dictionary_entry_activity_audit on public.dictionary_entr
 create trigger dictionary_entry_activity_audit
   after insert or update or delete on public.dictionary_entries
   for each row execute function private.capture_dictionary_entry_activity();
+
+
+-- Fix ambiguous output-column references in the owner-only admin grant RPC.
+create or replace function public.add_dictionary_admin_by_email(p_email text, p_role text default 'editor')
+returns table(user_id uuid, email text, role text, is_active boolean)
+language plpgsql
+security definer
+set search_path to ''
+as $function$
+declare
+  target_user_id uuid;
+  normalized_email text := lower(trim(p_email));
+begin
+  if auth.uid() is null or (select public.current_admin_role()) <> 'owner' then
+    raise exception 'Only the owner can add admins' using errcode = '42501';
+  end if;
+  if normalized_email is null or normalized_email = '' then
+    raise exception 'Email is required' using errcode = '22023';
+  end if;
+  if p_role not in ('admin','editor') then
+    raise exception 'Role must be admin or editor' using errcode = '22023';
+  end if;
+  select u.id into target_user_id
+  from auth.users as u
+  where lower(u.email) = normalized_email
+  limit 1;
+  if target_user_id is null then
+    raise exception 'No registered account found for this email. Ask the person to sign in once first.' using errcode = 'P0002';
+  end if;
+  insert into public.admin_users as existing_admin (user_id,email,role,is_active,created_by)
+  values (target_user_id,normalized_email,p_role,true,auth.uid())
+  on conflict on constraint admin_users_pkey
+  do update set email=excluded.email, role=excluded.role, is_active=true, created_by=auth.uid();
+  return query
+  select a.user_id, a.email, a.role, a.is_active
+  from public.admin_users as a
+  where a.user_id = target_user_id;
+end;
+$function$;
