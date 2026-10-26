@@ -33,6 +33,7 @@ GRANT EXECUTE ON FUNCTION public.current_admin_can(text) TO authenticated;
 
 -- Use granular permissions in database policies, not just UI visibility.
 DROP POLICY IF EXISTS "Admins can view published dictionary entries" ON public.dictionary_entries;
+DROP POLICY IF EXISTS "Public can view published dictionary entries" ON public.dictionary_entries;
 CREATE POLICY "Public can view published dictionary entries"
 ON public.dictionary_entries FOR SELECT TO anon, authenticated
 USING (status = 'published' OR (SELECT public.current_admin_can('entries_read')));
