@@ -59,7 +59,7 @@ async function boot(){
     const oauthError = params.get('error_description') || params.get('error') ||
       hashParams.get('error_description') || hashParams.get('error');
     if (oauthError) {
-      notice('Google sign-in ya kasa: ' + oauthError.replace(/\\+/g, ' '), true);
+      notice('Google sign-in ya kasa: ' + oauthError.replace(/\+/g, ' '), true);
       return;
     }
 
