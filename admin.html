@@ -42,7 +42,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const SUPABASE_URL = 'https://atoiwrpomcwurtuqolmc.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_XTQLRvmaBIcRyHskTEqxSw_EXkAdQxt';
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { flowType: 'pkce', detectSessionInUrl: false, persistSession: true, autoRefreshToken: true } });
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
 const $ = id => document.getElementById(id);
 let currentUser = null, currentRole = null, entriesCache = [], entriesPage = 0; const PAGE_SIZE = 100;
 function notice(message, error=false){const el=$('notice');el.textContent=message;el.hidden=false;el.classList.toggle('error',error)}
@@ -50,14 +50,48 @@ function clearNotice(){$('notice').hidden=true}
 function escapeHtml(value=''){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function fmtDate(v){return v?new Date(v).toLocaleDateString():'—'}
 async function signIn(){const button=$('googleSignIn');clearNotice();button.disabled=true;button.textContent='Ana buɗe Google…';try{const redirectTo=location.href.split('#')[0].split('?')[0];const {error}=await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo}});if(error)throw error}catch(error){notice('Ba a iya buɗe Google sign-in ba: '+(error?.message||String(error)),true);button.disabled=false;button.textContent='G ✦  Ci gaba da Google / Continue with Google'}}
-async function boot(){try{const url=new URL(window.location.href);const params=new URLSearchParams(url.search);const hashParams=new URLSearchParams(url.hash.replace(/^#/,''));
-const oauthError=params.get('error_description')||params.get('error')||hashParams.get('error_description')||hashParams.get('error');
-if(oauthError){notice('Google sign-in callback: '+oauthError.replace(/\+/g,' '),true);return}
-const code=params.get('code');
-if(code){const {data,error}=await supabase.auth.exchangeCodeForSession(code);if(error){notice('Ba a kammala Google sign-in ba: '+error.message,true);return}url.searchParams.delete('code');history.replaceState({},document.title,url.pathname+url.search+url.hash);await handleSession(data.session);supabase.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>handleSession(session),0)});return}
-const access_token=hashParams.get('access_token'),refresh_token=hashParams.get('refresh_token');
-if(access_token&&refresh_token){const {data,error}=await supabase.auth.setSession({access_token,refresh_token});if(error){notice('Ba a iya tabbatar da Google session ba: '+error.message,true);return}history.replaceState({},document.title,url.pathname+url.search);await handleSession(data.session);supabase.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>handleSession(session),0)});return}
-const {data,error}=await supabase.auth.getSession();if(error){notice('Ba a iya karanta session ba: '+error.message,true);return}await handleSession(data.session);supabase.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>handleSession(session),0)})}catch(error){notice('Matsalar kammala Google sign-in: '+(error?.message||String(error)),true)}}
+async function boot(){
+  // Let supabase-js process OAuth callback exactly once. Do not race it with a manual code exchange.
+  try {
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+    const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
+    const oauthError = params.get('error_description') || params.get('error') ||
+      hashParams.get('error_description') || hashParams.get('error');
+    if (oauthError) {
+      notice('Google sign-in ya kasa: ' + oauthError.replace(/\\+/g, ' '), true);
+      return;
+    }
+
+    // initialize() resolves only after Supabase has inspected/exchanged callback parameters.
+    if (typeof supabase.auth.initialize === 'function') {
+      const { error: initError } = await supabase.auth.initialize();
+      if (initError) {
+        notice('Ba a kammala tabbatar da Google sign-in ba: ' + initError.message, true);
+        return;
+      }
+    }
+
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      notice('Ba a iya karanta session ba: ' + error.message, true);
+      return;
+    }
+
+    // Clear OAuth parameters only after callback processing has completed.
+    if (url.searchParams.has('code') || url.hash.includes('access_token=') || url.hash.includes('error=')) {
+      url.searchParams.delete('code');
+      history.replaceState({}, document.title, url.pathname + url.search);
+    }
+
+    await handleSession(data.session);
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setTimeout(() => handleSession(session), 0);
+    });
+  } catch (error) {
+    notice('Matsalar kammala Google sign-in: ' + (error?.message || String(error)), true);
+  }
+}
 async function handleSession(session){currentUser=session?.user||null;$('authPanel').hidden=!!currentUser;$('dashboard').hidden=true;$('signOut').hidden=!currentUser;$('userEmail').textContent=currentUser?.email||'';currentRole=null;if(!currentUser)return;
 const {data:roleRow,error}=await supabase.from('admin_users').select('role,is_active').eq('user_id',currentUser.id).maybeSingle();
 if(error){notice('Ba a iya tabbatar da izinin admin ba: '+error.message,true);return}
