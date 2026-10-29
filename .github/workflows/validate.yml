@@ -14,6 +14,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Run employee-deletion handler unit tests
+        run: node --test tests/delete-employee-function.test.mjs
+
       - name: Validate HTML and inline JavaScript
         run: |
           python3 - <<'PY'
