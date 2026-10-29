@@ -17,6 +17,37 @@ jobs:
       - name: Run employee-deletion handler unit tests
         run: node --test tests/delete-employee-function.test.mjs
 
+      - name: Probe employee-deletion HTTP endpoint with invalid credentials only
+        run: |
+          node --input-type=module <<'JS'
+          const endpoint = 'https://atoiwrpomcwurtuqolmc.supabase.co/functions/v1/delete-dictionary-employee';
+          const options = await fetch(endpoint, {
+            method: 'OPTIONS',
+            headers: {
+              Origin: 'https://example.invalid',
+              'Access-Control-Request-Method': 'POST',
+              'Access-Control-Request-Headers': 'authorization,content-type'
+            }
+          });
+          console.log(`OPTIONS status: ${options.status}`);
+          if (options.status !== 204) throw new Error(`Expected OPTIONS 204, received ${options.status}`);
+
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              Authorization: 'Bearer invalid-test-token',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              user_id: '00000000-0000-4000-8000-000000000001',
+              attempt_key: '00000000-0000-4000-8000-000000000002'
+            })
+          });
+          console.log(`Invalid-auth POST status: ${response.status}`);
+          if (response.status !== 401) throw new Error(`Expected invalid-auth POST 401, received ${response.status}`);
+          console.log('Non-destructive HTTP probes passed.');
+          JS
+
       - name: Validate HTML and inline JavaScript
         run: |
           python3 - <<'PY'
