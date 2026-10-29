@@ -52,7 +52,7 @@ export function createDeleteEmployeeHandler({ createClient, getEnv }) {
     if (prepareError) {
       if (prepareError.code === '42501') return response(403, { error: 'Owner accounts and your own account cannot be deleted.' });
       if (prepareError.code === 'P0002') return response(404, { error: 'The selected employee no longer exists.' });
-      if (prepareError.code === '23514') return response(409, { error: 'The last active admin account cannot be deleted, or a database safeguard blocked this action.' });
+      if (prepareError.code === '23514') return response(409, { error: 'A database safeguard blocked this deletion. The selected account may be protected, or related data may prevent deletion.' });
       if (prepareError.code === 'P0001') return response(409, { error: 'This deletion attempt conflicts with an existing or cancelled request. Start a new attempt only after checking its status.' });
       return response(500, { error: 'Could not safely prepare the employee account for deletion.' });
     }
