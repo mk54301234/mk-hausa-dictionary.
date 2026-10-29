@@ -1,0 +1,112 @@
+name: Validate MK Hausa Dictionary
+on:
+  push:
+    branches:
+      - feature/mk-dictionary-ui
+  pull_request:
+    branches:
+      - main
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run employee-deletion handler unit tests
+        run: node --test tests/delete-employee-function.test.mjs
+
+      - name: Probe employee-deletion HTTP endpoint with invalid credentials only
+        run: |
+          node --input-type=module <<'JS'
+          const endpoint = 'https://atoiwrpomcwurtuqolmc.supabase.co/functions/v1/delete-dictionary-employee';
+          const options = await fetch(endpoint, {
+            method: 'OPTIONS',
+            headers: {
+              Origin: 'https://example.invalid',
+              'Access-Control-Request-Method': 'POST',
+              'Access-Control-Request-Headers': 'authorization,content-type'
+            }
+          });
+          console.log(`OPTIONS status: ${options.status}`);
+          if (options.status !== 204) throw new Error(`Expected OPTIONS 204, received ${options.status}`);
+
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              Authorization: 'Bearer invalid-test-token',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              user_id: '00000000-0000-4000-8000-000000000001',
+              attempt_key: '00000000-0000-4000-8000-000000000002'
+            })
+          });
+          console.log(`Invalid-auth POST status: ${response.status}`);
+          if (response.status !== 401) throw new Error(`Expected invalid-auth POST 401, received ${response.status}`);
+          console.log('Non-destructive HTTP probes passed.');
+          JS
+
+      - name: Validate HTML and inline JavaScript
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import re
+
+          class Checker(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.ids = set()
+                  self.duplicates = []
+                  self.scripts = []
+                  self.in_script = False
+                  self.current = []
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if 'id' in attrs:
+                      if attrs['id'] in self.ids:
+                          self.duplicates.append(attrs['id'])
+                      self.ids.add(attrs['id'])
+                  if tag == 'script' and not attrs.get('src'):
+                      self.in_script = True
+                      self.current = []
+              def handle_data(self, data):
+                  if self.in_script:
+                      self.current.append(data)
+              def handle_endtag(self, tag):
+                  if tag == 'script' and self.in_script:
+                      self.scripts.append(''.join(self.current))
+                      self.in_script = False
+
+          for filename in ('index.html', 'admin.html'):
+              parser = Checker()
+              parser.feed(Path(filename).read_text(encoding='utf-8'))
+              if parser.duplicates:
+                  raise SystemExit(f'{filename}: duplicate IDs: {parser.duplicates}')
+              for number, script in enumerate(parser.scripts):
+                  target = Path(f'/tmp/{Path(filename).stem}-{number}.mjs')
+                  target.write_text(script, encoding='utf-8')
+                  print(f'{filename}: extracted inline script {number + 1}')
+          PY
+          node --check /tmp/index-0.mjs
+          node --check /tmp/admin-0.mjs
+
+      - name: Smoke-test public Supabase dictionary and settings
+        run: |
+          node --input-type=module <<'JS'
+          const base = 'https://atoiwrpomcwurtuqolmc.supabase.co/rest/v1';
+          const key = 'sb_publishable_XTQLRvmaBIcRyHskTEqxSw_EXkAdQxt';
+          async function read(path) {
+            const response = await fetch(base + path, { headers: { apikey: key } });
+            if (!response.ok) throw new Error(`Supabase request failed (${response.status}) for ${path}`);
+            return response.json();
+          }
+          const words = await read('/dictionary_entries?select=id,hausa_word,english_translation,related_words&status=eq.published&limit=5');
+          if (!Array.isArray(words)) throw new Error('Published entries response is not an array');
+          if (words.length && (!words[0].hausa_word || !words[0].english_translation)) throw new Error('Published entry is missing required display fields');
+          const settings = await read('/dictionary_settings?select=home_direction&id=eq.true');
+          if (!Array.isArray(settings) || !settings.length || !['ha-en','en-ha'].includes(settings[0].home_direction)) throw new Error('Home Screen language setting is missing or invalid');
+          console.log(`Public API smoke test passed: ${words.length} published entry sample(s), Home Screen direction ${settings[0].home_direction}.`);
+          JS
