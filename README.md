@@ -20,7 +20,7 @@ These are candidate sources for a controlled import and editorial review, not a 
 
 ## Current status
 
-The live database currently has 2 published entries and 76 draft candidate entries awaiting editorial review. The public website fetches published records in stable pages of 1,000 rows, rather than stopping after a single 5,000-row request. Loading the entire corpus into the browser is still not the ideal long-term design for 100,000 entries; server-side search and pagination should be implemented before production-scale launch. Draft candidates are not visible on the public site until approved. The current manually prepared draft batch is a working review queue, not a claim of fully source-verified lexicographic content; verify Hausa spelling, senses, examples, and part of speech before publication.
+A read-only production check on 2026-11-01 found 717 total entries: 717 marked `published`, 0 `draft`, and 0 `archived`. This status count is not a quality certification. The same check found that 539 published entries lack a Hausa meaning, 184 lack an English meaning, 541 lack a part of speech, and all 717 lack examples and related-word links. These records should undergo editorial review and enrichment; do not interpret `published` as independently verified. No records were changed during the audit. The public website fetches published records in stable pages of 1,000 rows, rather than stopping after a single 5,000-row request. Loading the entire corpus into the browser is still not the ideal long-term design for 100,000 entries; server-side search and pagination should be implemented before production-scale launch.
 
 ## Development
 
