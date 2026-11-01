@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(
-  new URL('../supabase/migrations/20261101171400_enforce_publish_permission_on_entry_insert.sql', import.meta.url),
+  new URL('../supabase/migrations/20261101202450_enforce_publish_permission_on_entry_insert.sql', import.meta.url),
   'utf8'
 );
 const roleMigration = await readFile(
@@ -11,7 +11,7 @@ const roleMigration = await readFile(
   'utf8'
 );
 const settingsMigration = await readFile(
-  new URL('../supabase/migrations/20261101171401_revoke_excess_dictionary_settings_privileges.sql', import.meta.url),
+  new URL('../supabase/migrations/20261101202459_revoke_excess_dictionary_settings_privileges.sql', import.meta.url),
   'utf8'
 );
 
