@@ -14,8 +14,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Run employee-deletion handler unit tests
-        run: node --test tests/delete-employee-function.test.mjs
+      - name: Run all unit tests
+        run: node --test tests/*.test.mjs
 
       - name: Probe employee-deletion HTTP endpoint with invalid credentials only
         run: |
