@@ -128,8 +128,8 @@ body.querySelectorAll('[data-admin-remove]').forEach(b=>b.addEventListener('clic
 body.querySelectorAll('[data-account-delete]').forEach(b=>b.addEventListener('click',async()=>{
  const tr=b.closest('tr'),email=tr.querySelector('strong')?.textContent||'wannan ma’aikaci',userId=b.dataset.accountDelete;
  if(currentRole!=='owner'){notice('Owner ne kaɗai zai iya goge admin account.',true);return}
- if(!confirm('HANKALI: Za a goge Supabase Auth account na '+email+' gaba ɗaya. Wannan ya bambanta da cire izinin admin; mutum ba zai iya shiga da wannan account ba. A ci gaba?'))return;
- if(!confirm('Tabbatarwa ta ƙarshe: kana son goge account ɗin '+email+'? Wannan ba aikin cire izinin dashboard kawai ba ne.'))return;
+ if(!confirm('HANKALI: Za a goge Supabase Auth user record na '+email+'. Google account ɗinsa ba zai goge daga Google ba. Idan ya sake shiga daga baya, zai buƙaci a sake ba shi admin access. Wannan ya bambanta da cire izinin admin. A ci gaba?'))return;
+ if(!confirm('Tabbatarwa ta ƙarshe: kana son goge Supabase Auth user na '+email+'? Ba a goge Google account ɗin kansa ba.'))return;
  b.disabled=true;
  const attemptKey=deletionAttempts.get(userId)||crypto.randomUUID();
  deletionAttempts.set(userId,attemptKey);
