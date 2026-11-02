@@ -92,6 +92,9 @@ jobs:
           PY
           node --check /tmp/index-0.mjs
           node --check /tmp/admin-0.mjs
+          node --check public/dictionary-entry.mjs
+          node --check public/dictionary-dashboard.mjs
+          node --check public/admin-dashboard.mjs
 
       - name: Smoke-test public Supabase dictionary and settings
         run: |
